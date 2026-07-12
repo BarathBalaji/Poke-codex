@@ -23,6 +23,21 @@
   src: url('/fonts/fraktur.woff2') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
 }
+@font-face {
+  font-family: 'Tangerine';
+  src: url('/fonts/tangerine-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Tangerine';
+  src: url('/fonts/tangerine-700.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'La Belle Aurore';
+  src: url('/fonts/belle-aurore.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
 
 :root {
   --parchment:      #ecdcb8;
@@ -39,6 +54,8 @@
   --serif: 'IM Fell English', 'Palatino Linotype', Palatino, Georgia, serif;
   --smallcaps: 'IM Fell English SC', 'Palatino Linotype', Georgia, serif;
   --blackletter: 'UnifrakturMaguntia', 'IM Fell English', Georgia, serif;
+  --hand-display: 'Tangerine', 'IM Fell English', cursive, serif;
+  --hand-note: 'La Belle Aurore', 'IM Fell English', cursive;
 
   --paper-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.36  0 0 0 0 0.27  0 0 0 0 0.14  0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23p)'/%3E%3C/svg%3E");
 }
@@ -150,10 +167,16 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 
 .folio {
   position: relative;
-  width: min(1080px, 100%);
-  margin: 0 auto;
-  padding: clamp(1.6rem, 4.5vw, 3.8rem) clamp(1.2rem, 5vw, 4.2rem) clamp(2.4rem, 4vw, 3.2rem);
+  width: 100%;
+  margin: 0;
+  padding: clamp(1.6rem, 4vw, 3.6rem) clamp(1.1rem, 6vw, 6rem) clamp(2.4rem, 4vw, 3.2rem);
   overflow: hidden;
+}
+/* the writing sits in a journal measure inside the full-bleed sheet */
+.folio > * { position: relative; z-index: 1; }
+.folio-inner {
+  max-width: 1240px;
+  margin: 0 auto;
 }
 
 .running-head {
@@ -471,15 +494,15 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 
 .codex-root {
   min-height: 100vh;
-  padding: clamp(1rem, 3.5vw, 3rem) clamp(.5rem, 3vw, 3rem) 7rem;
+  padding: 0 0 6.5rem;
 }
 
 .stage {
   position: relative;
-  perspective: 2600px;
+  perspective: 3000px;
   perspective-origin: 50% 40%;
-  width: min(1080px, 100%);
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 .stage.turning { min-height: 100vh; overflow: visible; }
 .stage.turning .sheet {
@@ -934,4 +957,245 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
   .ribbon-title .ribbon-hint { display: none; }
   .ribbon-home { padding: 0 .7rem; font-size: .7rem; }
   .ribbon-arrow { padding: .6rem .8rem; }
+}
+
+/* ————————————————————————————————————————————————
+   Explorer's journal — irregular, handwritten folios
+   (supersedes the boxed .chapter/.plate layout)
+   ———————————————————————————————————————————————— */
+
+.leaf-running {
+  text-align: center;
+  font-family: var(--smallcaps);
+  font-size: .8rem;
+  letter-spacing: .26em;
+  text-indent: .26em;
+  color: color-mix(in srgb, var(--ink-faint) 78%, transparent);
+  margin-bottom: 2.2rem;
+  padding-bottom: .7rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+}
+.leaf-running .amp { color: var(--rubric); }
+
+/* the line title, written by hand */
+.leaf-title {
+  margin: 0 0 1.4rem;
+  transform: rotate(-1.2deg);
+  transform-origin: left center;
+}
+.leaf-title .leaf-dex {
+  font-family: var(--smallcaps);
+  font-size: .82rem;
+  letter-spacing: .34em;
+  text-indent: .34em;
+  color: var(--rubric);
+}
+.leaf-name {
+  font-family: var(--hand-display);
+  font-weight: 700;
+  font-size: clamp(3.6rem, 9vw, 6.6rem);
+  line-height: .82;
+  color: var(--ink);
+  margin: .1rem 0 .2rem -.05em;
+}
+.leaf-genus {
+  font-style: italic;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  color: var(--ink-faint);
+}
+.leaf-crests {
+  margin-top: .5rem;
+  font-family: var(--hand-note);
+  font-size: 1.15rem;
+  color: var(--verdigris);
+  display: flex;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+.leaf-crests .dot { color: var(--gold); }
+
+/* hand-sketched lineage */
+.lineage-sketch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem 1rem;
+  margin: 1.6rem 0 2.4rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink-faint) 22%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink-faint) 22%, transparent);
+}
+.lineage-sketch .lin-medallion {
+  width: clamp(66px, 9vw, 96px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.lineage-sketch .lin-medallion img {
+  width: 96%;
+  filter: sepia(.5) saturate(.7) contrast(1.05);
+  mix-blend-mode: multiply;
+  transform: rotate(var(--r, -2deg));
+}
+.lineage-sketch .lin-ring { position: absolute; inset: -6px; color: var(--gold); opacity: .8; }
+.lineage-sketch .lin-step {
+  font-family: var(--hand-note);
+  font-size: 1.05rem;
+  color: var(--ink-faint);
+  text-align: center;
+  max-width: 8rem;
+  line-height: 1.2;
+}
+.lineage-sketch .lin-step .lin-arrow { color: var(--rubric); font-size: 1.3rem; display: block; }
+
+/* ——— a single creature, written up ——— */
+.entry {
+  display: flow-root;
+  margin: 3.2rem 0;
+  padding-top: 2.4rem;
+  position: relative;
+}
+.entry + .entry { border-top: 1px dashed color-mix(in srgb, var(--ink-faint) 30%, transparent); }
+.entry:first-of-type { padding-top: 0; }
+
+.entry-hand-head { margin-bottom: 1rem; }
+.entry-hand-head .eh-no {
+  font-family: var(--smallcaps);
+  font-size: .8rem;
+  letter-spacing: .2em;
+  color: var(--rubric);
+}
+.entry-hand-head .eh-name {
+  font-family: var(--hand-display);
+  font-weight: 700;
+  font-size: clamp(2.8rem, 6vw, 4.4rem);
+  line-height: .9;
+  color: var(--ink);
+  display: inline-block;
+  transform: rotate(var(--name-rot, -1.5deg));
+}
+.entry-hand-head .eh-genus { font-style: italic; color: var(--ink-faint); margin-left: .4rem; }
+.entry-hand-head .eh-from {
+  font-family: var(--hand-note);
+  font-size: 1.05rem;
+  color: var(--verdigris);
+  margin-top: .2rem;
+}
+
+/* the specimen illustration, pinned at an angle */
+.specimen {
+  width: var(--img-w, 300px);
+  max-width: 46%;
+  margin: .3rem 0 1rem;
+  text-align: center;
+}
+.specimen.side-right { float: right; margin-left: clamp(1.4rem, 3vw, 3rem); shape-outside: margin-box; }
+.specimen.side-left  { float: left;  margin-right: clamp(1.4rem, 3vw, 3rem); shape-outside: margin-box; }
+.specimen .plate-wrap { position: relative; display: inline-block; transform: rotate(var(--img-rot, 2deg)); }
+.specimen img {
+  width: 100%;
+  filter: sepia(.5) saturate(.72) contrast(1.06) brightness(.98) drop-shadow(1px 3px 2px rgba(46, 32, 19, .22));
+  mix-blend-mode: multiply;
+}
+.specimen .ink-frame { position: absolute; inset: -6% -5%; color: var(--ink-faint); opacity: .55; pointer-events: none; }
+.specimen figcaption {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: .92rem;
+  color: var(--ink-faint);
+  margin-top: .7rem;
+  transform: rotate(var(--cap-rot, -1deg));
+  text-wrap: pretty;
+}
+.specimen figcaption .src { font-family: var(--smallcaps); font-style: normal; font-size: .72rem; letter-spacing: .08em; }
+.specimen .plate-tag {
+  display: block;
+  font-family: var(--hand-note);
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--ink-faint) 80%, transparent);
+  margin-top: .1rem;
+}
+
+/* flowing field notes in a running italic hand */
+.hand-notes { font-style: italic; font-size: clamp(1.02rem, 1.5vw, 1.16rem); line-height: 1.75; }
+.hand-notes p { margin-bottom: .85rem; text-wrap: pretty; }
+.hand-notes p:last-child { margin-bottom: 0; }
+.hand-notes .dropcap::first-letter {
+  font-family: var(--hand-display);
+  font-weight: 700;
+  font-style: normal;
+  float: left;
+  font-size: 5.2rem;
+  line-height: .62;
+  padding: .22em .12em 0 0;
+  margin-top: .06em;
+  color: var(--rubric);
+}
+.hand-notes .quill {
+  display: block;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: .96rem;
+  color: var(--ink-faint);
+  margin-top: .6rem;
+  padding-left: 1.4rem;
+  border-left: 2px solid color-mix(in srgb, var(--rubric) 45%, transparent);
+}
+
+/* handwritten margin annotations, not tables */
+.scrawls { margin-top: 1.6rem; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.4rem 2.8rem; }
+.scrawl { flex: 1 1 14rem; min-width: 0; }
+.scrawl.measures { flex: 0 1 17rem; }
+/* stagger the notes so they never sit in a tidy row */
+.scrawls .scrawl:nth-child(1) { margin-top: .5rem; transform: rotate(-.5deg); }
+.scrawls .scrawl:nth-child(2) { margin-top: 1.7rem; transform: rotate(.4deg); }
+.scrawls .scrawl:nth-child(3) { margin-top: .1rem; transform: rotate(-.3deg); }
+.scrawl .sc-label {
+  font-family: var(--hand-note);
+  font-size: 1.35rem;
+  color: var(--rubric);
+  display: inline-block;
+  transform: rotate(var(--sc-rot, -1.5deg));
+  margin-bottom: .2rem;
+}
+.scrawl .sc-body { font-style: italic; font-size: 1.02rem; line-height: 1.6; color: var(--ink); text-wrap: pretty; }
+.scrawl .sc-body .lvl { font-family: var(--smallcaps); font-style: normal; color: var(--rubric); font-size: .82rem; letter-spacing: .06em; }
+.scrawl.measures .sc-body {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: .55rem 1.15rem;
+  font-style: normal;
+}
+.measures .stat {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.measures .stat .st-key { font-family: var(--smallcaps); font-size: .66rem; letter-spacing: .05em; color: var(--ink-faint); margin-bottom: .16rem; }
+.measures .stat .st-val { font-family: var(--hand-display); font-weight: 700; font-size: 1.85rem; color: var(--ink); }
+.measures .stat .st-bar { width: 2.3rem; height: 3px; margin-top: .1rem; background: color-mix(in srgb, var(--ink-faint) 35%, transparent); }
+.measures .stat .st-bar i { display: block; height: 100%; width: calc(var(--v) / 180 * 100%); background: var(--rubric); }
+
+.leaf-foot {
+  margin-top: 3.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--smallcaps);
+  font-size: .82rem;
+  letter-spacing: .2em;
+  color: var(--ink-faint);
+}
+.leaf-foot .catch { font-family: var(--serif); font-style: italic; letter-spacing: 0; }
+
+@media (max-width: 720px) {
+  .specimen { float: none !important; width: 74% !important; max-width: 74%; margin: .6rem auto 1.2rem !important; display: block; }
+  .specimen.side-left, .specimen.side-right { shape-outside: none; }
+  .entry-hand-head .eh-name { transform: rotate(-1deg); }
 }

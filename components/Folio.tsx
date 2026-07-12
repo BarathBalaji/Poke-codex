@@ -12,199 +12,219 @@ import {
 } from "@/lib/data";
 import HabitatBackdrop from "@/components/HabitatBackdrop";
 
-function RubricName({ name }: { name: string }) {
+/* deterministic per-creature layout so every entry is laid out differently,
+   yet stable between renders. */
+function seeded(id: number) {
+  let s = (id * 2654435761) >>> 0;
+  return () => {
+    s = (s * 1103515245 + 12345) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+const lower = (s: string) => s[0].toLowerCase() + s.slice(1);
+
+/* "FireRed · LeafGreen · HeartGold" -> "FireRed, LeafGreen and HeartGold" */
+function prettyGames(games: string): string {
+  const parts = games.split(" · ");
+  if (parts.length === 1) return parts[0];
+  return parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
+}
+
+/* run-on account of where a creature is found, in the explorer's voice */
+function rangeProse(sp: Species, parentName: string | null, method: string | null): string {
+  const rows = rangeRows(sp);
+  if (rows.length === 0) {
+    if (parentName)
+      return `Not taken in the wild; it is raised up from ${parentName}${method ? ", " + lower(method) : ""}.`;
+    return "Not to be taken in the wild by any means known to me.";
+  }
+  const shown = rows.slice(0, 4);
+  const parts = shown.map((r) => `in ${prettyGames(r.games)}, about ${r.places}`);
+  let out = "Met with " + parts.join("; ");
+  if (rows.length > shown.length) out += "; and in sundry regions besides";
+  return out + ".";
+}
+
+/* a wobbly inked underline drawn beneath a heading */
+function InkUnderline({ w = 320 }: { w?: number }) {
   return (
-    <>
-      <span className="cap">{name[0]}</span>
-      {name.slice(1).toUpperCase()}
-    </>
+    <svg
+      viewBox={`0 0 ${w} 14`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      style={{ display: "block", width: "100%", height: "11px", marginTop: ".1rem", overflow: "visible" }}
+    >
+      <path
+        d={`M3 8 Q ${w * 0.2} 3 ${w * 0.42} 7 T ${w * 0.72} 6 T ${w - 3} 7`}
+        fill="none"
+        stroke="var(--rubric)"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        filter="url(#inked)"
+      />
+    </svg>
+  );
+}
+
+/* rough hand-drawn ring, for lineage medallions */
+function InkRing() {
+  return (
+    <svg className="lin-ring" viewBox="0 0 100 100" aria-hidden="true">
+      <path
+        d="M50 6 C 74 4 96 26 94 50 C 96 76 72 96 50 94 C 26 96 4 72 6 50 C 5 25 27 7 50 6 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        filter="url(#inked)"
+      />
+    </svg>
+  );
+}
+
+/* rough hand-drawn frame around a specimen */
+function InkFrame() {
+  return (
+    <svg className="ink-frame" viewBox="0 0 200 200" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        d="M8 6 L 192 10 L 194 190 L 6 194 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1"
+        filter="url(#inked)"
+      />
+    </svg>
   );
 }
 
 function typesLine(sp: Species): string {
-  const t = sp.types.map((x) => TYPE_LABEL[x] ?? x).join(" and ");
-  return `Of the ${t} kind`;
+  return "Of the " + sp.types.map((x) => TYPE_LABEL[x] ?? x).join(" and ") + " kind";
 }
 
-/** "Bulbasaur becomes Ivysaur at level 16; Ivysaur becomes Venusaur at level 32." */
-function lineageCaption(page: FolioPage): string {
-  const parts: string[] = [];
-  for (const m of page.members) {
-    if (!m.from || !m.method) continue;
-    const from = getSpecies(m.from).name;
-    const to = getSpecies(m.id).name;
-    const method = m.method[0].toLowerCase() + m.method.slice(1);
-    parts.push(`${from} becomes ${to} ${method}`);
-  }
-  if (parts.length === 0) return "";
-  return parts.join("; ") + ".";
+function Measures({ sp }: { sp: Species }) {
+  return (
+    <div className="scrawl measures">
+      <span className="sc-label" style={{ ["--sc-rot" as string]: "-2deg" }}>
+        by my measure
+      </span>
+      <div className="sc-body">
+        {STAT_LABELS.map(([key, label]) => (
+          <span className="stat" key={key}>
+            <span className="st-key">{label}</span>
+            <span className="st-val">{sp.stats[key]}</span>
+            <span className="st-bar">
+              <i style={{ ["--v" as string]: sp.stats[key] }} />
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-function pickQuote(sp: Species): { version: string; text: string } | null {
-  if (sp.flavor.length === 0) return null;
-  return [...sp.flavor].sort((a, b) => b.text.length - a.text.length)[0];
-}
-
-function Chapter({
-  page,
+function Entry({
   member,
   solo,
 }: {
-  page: FolioPage;
   member: FolioPage["members"][number];
   solo: boolean;
 }) {
   const sp = getSpecies(member.id);
   const note = getNote(member.id);
-  const rows = rangeRows(sp);
-  const quote = pickQuote(sp);
-  const evolvesFrom = member.from ? getSpecies(member.from) : null;
-  const wildless = rows.length === 0;
+  const parent = member.from ? getSpecies(member.from) : null;
+
+  const rand = seeded(sp.id);
+  const side = rand() < 0.5 ? "left" : "right";
+  const imgW = Math.round(230 + rand() * 140);
+  const imgRot = (rand() * 5 - 2.5).toFixed(2);
+  const nameRot = (rand() * 5.5 - 3).toFixed(2);
+  const capRot = (rand() * 4 - 2).toFixed(2);
+  const scRotA = (rand() * 5 - 2.5).toFixed(2);
+  const scRotB = (rand() * 5 - 2.5).toFixed(2);
+  const framed = rand() < 0.55;
+
+  const quote = sp.flavor.length
+    ? [...sp.flavor].sort((a, b) => b.text.length - a.text.length)[0]
+    : null;
+  const paras = (note?.notes ?? sp.flavor[0]?.text ?? "").split("\n");
 
   return (
-    <section className="chapter" id={`no-${sp.id}`}>
+    <section className="entry" id={`no-${sp.id}`}>
       {!solo && (
-        <header className="chapter-head">
-          <p className="chapter-no">{dexNo(sp.id)}</p>
-          <h3 className="chapter-name">
-            <RubricName name={sp.name} />
-          </h3>
-          <p className="chapter-genus">the {sp.genus} Pokémon</p>
-          {evolvesFrom && member.method && (
-            <p className="chapter-evolves">
-              From {evolvesFrom.name} · {member.method}
-            </p>
+        <header className="entry-hand-head">
+          <span className="eh-no">{dexNo(sp.id)}</span>
+          <div>
+            <span className="eh-name" style={{ ["--name-rot" as string]: `${nameRot}deg` }}>
+              {sp.name}
+            </span>
+            <span className="eh-genus">the {sp.genus} Pokémon</span>
+          </div>
+          {parent && member.method && (
+            <p className="eh-from">raised from {parent.name}, {lower(member.method)}</p>
           )}
         </header>
       )}
 
-      <div className="chapter-grid">
-        <div className="chapter-col">
-          <figure className="plate">
-            {/* Artwork is treated toward ink and parchment by CSS filters. */}
-            <img
-              src={`/art/${sp.id}.png`}
-              alt={`Illustrated plate of ${sp.name}`}
-              width={475}
-              height={475}
-              loading={sp.id === page.members[0].id ? "eager" : "lazy"}
-            />
-            {quote && (
-              <figcaption>
-                “{quote.text}” <span className="src">({quote.version})</span>
-              </figcaption>
-            )}
-            <span className="plate-no">Plate {roman(sp.id)}</span>
-          </figure>
+      <figure
+        className={`specimen side-${side}`}
+        style={{ ["--img-w" as string]: `${imgW}px` }}
+      >
+        <span className="plate-wrap" style={{ ["--img-rot" as string]: `${imgRot}deg` }}>
+          <img
+            src={`/art/${sp.id}.png`}
+            alt={`Illustrated plate of ${sp.name}`}
+            width={475}
+            height={475}
+            loading={member.from === null ? "eager" : "lazy"}
+          />
+          {framed && <InkFrame />}
+        </span>
+        {quote && (
+          <figcaption style={{ ["--cap-rot" as string]: `${capRot}deg` }}>
+            “{quote.text}”
+            <span className="src"> ({quote.version})</span>
+          </figcaption>
+        )}
+        <span className="plate-tag">plate {roman(sp.id)}</span>
+      </figure>
 
-          <section>
-            <h4 className="rubric">Vital Statistics</h4>
-            <table className="codex-table">
-              <tbody>
-                <tr>
-                  <td className="label">Height</td>
-                  <td>{sp.height.toFixed(1)} m</td>
-                </tr>
-                <tr>
-                  <td className="label">Weight</td>
-                  <td>{sp.weight.toFixed(1)} kg</td>
-                </tr>
-                <tr>
-                  <td className="label">
-                    {sp.abilities.length > 1 ? "Abilities" : "Ability"}
-                  </td>
-                  <td>
-                    {sp.abilities
-                      .map((a) => a.name + (a.hidden ? " (hidden)" : ""))
-                      .join(", ")}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="label">Habitat</td>
-                  <td style={{ textTransform: "capitalize" }}>
-                    {sp.habitat.replace("-", " ")}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
+      <div className="hand-notes">
+        {paras.map((p, i) => (
+          <p key={i} className={i === 0 ? "dropcap" : undefined}>
+            {p}
+          </p>
+        ))}
+        {note?.scribe && <span className="quill">{note.scribe}</span>}
+      </div>
 
-          <section>
-            <h4 className="rubric">Base Measures</h4>
-            <div className="measures">
-              {STAT_LABELS.map(([key, label]) => (
-                <div className="measure" key={key}>
-                  <span className="m-label">{label}</span>
-                  <span className="m-bar">
-                    <i style={{ ["--v" as string]: sp.stats[key] }} />
+      <div className="scrawls">
+        <Measures sp={sp} />
+
+        <div className="scrawl">
+          <span className="sc-label" style={{ ["--sc-rot" as string]: `${scRotA}deg` }}>
+            where it is met
+          </span>
+          <p className="sc-body">{rangeProse(sp, parent?.name ?? null, member.method)}</p>
+        </div>
+
+        {sp.moves.length > 0 && (
+          <div className="scrawl">
+            <span className="sc-label" style={{ ["--sc-rot" as string]: `${scRotB}deg` }}>
+              arts it is seen to know
+            </span>
+            <p className="sc-body">
+              {sp.moves.slice(0, 7).map((m, i, arr) => (
+                <span key={m.name}>
+                  {m.name}{" "}
+                  <span className="lvl">
+                    ({m.level <= 1 ? "from birth" : roman(m.level)})
                   </span>
-                  <span className="m-val">{sp.stats[key]}</span>
-                </div>
+                  {i < arr.length - 1 ? ", " : "."}
+                </span>
               ))}
-            </div>
-          </section>
-        </div>
-
-        <div className="chapter-col">
-          <section className="notes">
-            <h4 className="rubric">Field Notes</h4>
-            {(note?.notes ?? sp.flavor[0]?.text ?? "").split("\n").map((para, i) => (
-              <p key={i} className={i === 0 ? "dropcap" : undefined}>
-                {para}
-              </p>
-            ))}
-            {note?.scribe && <p className="margin-note">{note.scribe}</p>}
-          </section>
-
-          <section>
-            <h4 className="rubric">Where It Is Found</h4>
-            <table className="codex-table">
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.games}>
-                    <td className="label">{r.games}</td>
-                    <td>{r.places}</td>
-                  </tr>
-                ))}
-                {wildless && evolvesFrom && (
-                  <tr>
-                    <td className="label">All games</td>
-                    <td>
-                      Not found in the wild. It is raised from {evolvesFrom.name}
-                      {member.method
-                        ? `, ${member.method[0].toLowerCase()}${member.method.slice(1)}`
-                        : ""}
-                      .
-                    </td>
-                  </tr>
-                )}
-                {wildless && !evolvesFrom && (
-                  <tr>
-                    <td className="label">All games</td>
-                    <td>Not found in the wild.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
-
-          {sp.moves.length > 0 && (
-            <section>
-              <h4 className="rubric">Notable Arts</h4>
-              <table className="codex-table arts-table">
-                <tbody>
-                  {sp.moves.slice(0, solo ? 8 : 5).map((m) => (
-                    <tr key={m.name}>
-                      <td className="lvl">{m.level <= 1 ? 1 : m.level}</td>
-                      <td className="art-name">{m.name}</td>
-                      <td className="art-kind">{m.desc}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
-          )}
-        </div>
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -213,18 +233,17 @@ function Chapter({
 export default function Folio({ page }: { page: FolioPage }) {
   const first = getSpecies(page.members[0].id);
   const solo = page.members.length === 1;
-  const caption = lineageCaption(page);
+  const last = page.members[page.members.length - 1];
   const next = pages[page.folio] ? getSpecies(pages[page.folio].members[0].id) : null;
-  const title = solo
-    ? first.name
-    : `The ${first.name} Line`;
+
+  const lineName = solo ? first.name : `The ${first.name} Line`;
   const dexSpan = solo
     ? dexNo(first.id)
-    : `${dexNo(page.members[0].id)} – ${String(page.members[page.members.length - 1].id).padStart(3, "0")}`;
+    : `${dexNo(first.id)} to ${String(last.id).padStart(3, "0")}`;
   const legendMark = page.members.some((m) => getSpecies(m.id).isMythical)
-    ? "Mythical"
+    ? "a mythical creature"
     : page.members.some((m) => getSpecies(m.id).isLegendary)
-      ? "Legendary"
+      ? "a legendary creature"
       : null;
 
   return (
@@ -232,75 +251,69 @@ export default function Folio({ page }: { page: FolioPage }) {
       <HabitatBackdrop habitat={first.habitat} />
 
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
-        <filter id="inked" x="-5%" y="-5%" width="110%" height="110%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.017" numOctaves="2" seed="3" result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="6" xChannelSelector="R" yChannelSelector="G" />
+        <filter id="inked" x="-8%" y="-8%" width="116%" height="116%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.014 0.02" numOctaves="2" seed="4" result="n" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </svg>
 
-      <header className="running-head">
-        <h1 className="codex-title">
-          Codex Monstrorum <span className="amp">⁂</span> Regnum Kanto
-        </h1>
-      </header>
-
-      <div className="entry-head">
-        <p className="entry-no">{dexSpan}</p>
-        <h2 className="entry-name">
-          <RubricName name={title} />
-        </h2>
-        <p className="entry-genus">the {first.genus} Pokémon{solo ? "" : " and its line"}</p>
-        <p className="entry-crests">
-          <span className="fleuron">❦</span>
-          <span>{typesLine(first)}</span>
-          {legendMark && (
-            <>
-              <span className="fleuron">✦</span>
-              <span>{legendMark}</span>
-            </>
-          )}
-          <span className="fleuron">❦</span>
+      <div className="folio-inner">
+        <p className="leaf-running">
+          Codex Monstrorum <span className="amp">·</span> Regnum Kanto{" "}
+          <span className="amp">·</span> folio {roman(page.folio)}
         </p>
-      </div>
 
-      {!solo && (
-        <>
-          <div className="lineage-strip">
+        <div className="leaf-title">
+          <span className="leaf-dex">{dexSpan}</span>
+          <h1 className="leaf-name">{lineName}</h1>
+          <InkUnderline w={420} />
+          <p className="leaf-genus">the {first.genus} Pokémon{solo ? "" : " and its kin"}</p>
+          <p className="leaf-crests">
+            <span>{typesLine(first)}</span>
+            {legendMark && (
+              <>
+                <span className="dot">✦</span>
+                <span>{legendMark}</span>
+              </>
+            )}
+          </p>
+        </div>
+
+        {!solo && (
+          <div className="lineage-sketch">
             {page.members.map((m, i) => (
               <span key={m.id} style={{ display: "contents" }}>
                 {i > 0 && m.from === page.members[i - 1].id && (
-                  <span className="lineage-arrow">
-                    <span className="arrow-glyph" aria-hidden="true">➳</span>
+                  <span className="lin-step">
+                    <span className="lin-arrow" aria-hidden="true">➳</span>
                     {m.method ?? ""}
                   </span>
                 )}
-                <span className="medallion">
-                  <img src={`/art/${m.id}.png`} alt="" width={104} height={104} loading="lazy" />
+                <span className="lin-medallion">
+                  <img
+                    src={`/art/${m.id}.png`}
+                    alt=""
+                    width={96}
+                    height={96}
+                    loading="lazy"
+                    style={{ ["--r" as string]: `${(i % 2 ? 2 : -2)}deg` }}
+                  />
+                  <InkRing />
                 </span>
               </span>
             ))}
           </div>
-          {caption && <p className="lineage-caption">{caption}</p>}
-        </>
-      )}
-
-      {page.members.map((m, i) => (
-        <span key={m.id} style={{ display: "contents" }}>
-          {i > 0 && <p className="chapter-rule" aria-hidden="true">❦ ✦ ❦</p>}
-          <Chapter page={page} member={m} solo={solo} />
-        </span>
-      ))}
-
-      <p className="fleuron-row" aria-hidden="true">❦ ✦ ❦</p>
-
-      <footer className="folio-foot">
-        <p className="foot-no">folio {roman(page.folio)} of {roman(pages.length)}</p>
-        {next && (
-          <p className="catchword" title="The catchword names the folio to come">
-            {next.name}
-          </p>
         )}
-      </footer>
+
+        {page.members.map((m) => (
+          <Entry key={m.id} member={m} solo={solo} />
+        ))}
+
+        <footer className="leaf-foot">
+          <span>folio {roman(page.folio)} of {roman(pages.length)}</span>
+          {next && <span className="catch">{next.name}</span>}
+        </footer>
+      </div>
     </article>
   );
 }
