@@ -57,7 +57,15 @@
   --hand-display: 'Tangerine', 'IM Fell English', cursive, serif;
   --hand-note: 'La Belle Aurore', 'IM Fell English', cursive;
 
-  --paper-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.36  0 0 0 0 0.27  0 0 0 0 0.14  0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23p)'/%3E%3C/svg%3E");
+  --paper-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.36  0 0 0 0 0.27  0 0 0 0 0.14  0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23p)'/%3E%3C/svg%3E");
+  /* long paper fibres */
+  --paper-fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7 0.018' numOctaves='2' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.30  0 0 0 0 0.22  0 0 0 0 0.11  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='340' height='340' filter='url(%23f)'/%3E%3C/svg%3E");
+  /* faint foxing / age spots */
+  --paper-foxing: radial-gradient(circle at 18% 24%, rgba(120, 88, 44, .05) 0 6px, transparent 7px),
+                  radial-gradient(circle at 72% 12%, rgba(120, 88, 44, .045) 0 5px, transparent 6px),
+                  radial-gradient(circle at 84% 62%, rgba(120, 88, 44, .05) 0 7px, transparent 8px),
+                  radial-gradient(circle at 32% 78%, rgba(120, 88, 44, .04) 0 5px, transparent 6px),
+                  radial-gradient(circle at 54% 44%, rgba(120, 88, 44, .035) 0 8px, transparent 9px);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -81,6 +89,8 @@ a { color: inherit; }
 /* ————— shared paper surface ————— */
 .paper {
   background:
+    var(--paper-foxing),
+    var(--paper-fiber),
     var(--paper-noise),
     radial-gradient(ellipse 90% 80% at 50% 35%, var(--parchment) 30%, var(--parchment-deep) 78%, var(--parchment-edge) 100%);
   box-shadow:
@@ -658,7 +668,7 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 .search-results li button:hover { background: color-mix(in srgb, var(--gold) 14%, transparent); }
 .search-results img {
   grid-area: img;
-  filter: sepia(.5) saturate(.72) contrast(1.06);
+  filter: url(#roughen) sepia(.5) saturate(.72) contrast(1.06);
   mix-blend-mode: multiply;
 }
 .search-results .r-name { grid-area: name; font-size: 1.05rem; }
@@ -1035,7 +1045,7 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 }
 .lineage-sketch .lin-medallion img {
   width: 96%;
-  filter: sepia(.5) saturate(.7) contrast(1.05);
+  filter: url(#roughen) sepia(.5) saturate(.7) contrast(1.05);
   mix-blend-mode: multiply;
   transform: rotate(var(--r, -2deg));
 }
@@ -1048,7 +1058,14 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
   max-width: 8rem;
   line-height: 1.2;
 }
-.lineage-sketch .lin-step .lin-arrow { color: var(--rubric); font-size: 1.3rem; display: block; }
+.lineage-sketch .lin-step .lin-arrow-svg {
+  display: block;
+  width: 3.4rem;
+  height: auto;
+  margin: 0 auto .1rem;
+  color: var(--rubric);
+  overflow: visible;
+}
 
 /* ——— a single creature, written up ——— */
 .entry {
@@ -1096,7 +1113,7 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 .specimen .plate-wrap { position: relative; display: inline-block; transform: rotate(var(--img-rot, 2deg)); }
 .specimen img {
   width: 100%;
-  filter: sepia(.5) saturate(.72) contrast(1.06) brightness(.98) drop-shadow(1px 3px 2px rgba(46, 32, 19, .22));
+  filter: url(#roughen) sepia(.5) saturate(.72) contrast(1.06) brightness(.98) drop-shadow(1px 3px 2px rgba(46, 32, 19, .22));
   mix-blend-mode: multiply;
 }
 .specimen .ink-frame { position: absolute; inset: -6% -5%; color: var(--ink-faint); opacity: .55; pointer-events: none; }
@@ -1281,3 +1298,17 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
   .rec-range .rec-dl dt { margin-top: .5rem; }
   .rec-range .rec-dl dd { margin-left: .3rem; }
 }
+
+/* ————— faint region chart behind each folio ————— */
+.folio > .region-map { z-index: 0; }
+.region-map {
+  position: absolute;
+  inset: clamp(2rem, 8vh, 7rem) 0 auto 0;
+  height: min(78%, 900px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  opacity: .05;
+  mix-blend-mode: multiply;
+}
+.region-map svg { width: min(1100px, 92%); height: 100%; }

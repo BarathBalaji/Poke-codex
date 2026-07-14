@@ -31,6 +31,7 @@ export interface FolioPage {
   members: PageMember[];
   folio: number;
   slug: string;
+  region?: string;
 }
 
 export interface SpeciesNote {

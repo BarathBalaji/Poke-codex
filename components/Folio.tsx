@@ -11,6 +11,7 @@ import {
   TYPE_LABEL,
 } from "@/lib/data";
 import HabitatBackdrop from "@/components/HabitatBackdrop";
+import RegionMap from "@/components/RegionMap";
 
 /* deterministic per-creature layout so every entry is laid out differently,
    yet stable between renders. */
@@ -54,6 +55,33 @@ function InkRing() {
         fill="none"
         stroke="currentColor"
         strokeWidth="1.6"
+        filter="url(#inked)"
+      />
+    </svg>
+  );
+}
+
+/* hand-drawn ink arrow marking an evolution */
+function InkArrow() {
+  return (
+    <svg className="lin-arrow-svg" viewBox="0 0 68 34" aria-hidden="true">
+      {/* a slightly wavering shaft */}
+      <path
+        d="M4 18 C 20 14, 34 21, 52 17"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        filter="url(#inked)"
+      />
+      {/* an open, two-stroke arrowhead */}
+      <path
+        d="M44 8 C 50 12, 55 15, 60 17 C 54 19, 49 23, 45 28"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         filter="url(#inked)"
       />
     </svg>
@@ -264,6 +292,7 @@ export default function Folio({ page }: { page: FolioPage }) {
 
   return (
     <article className="folio paper">
+      <RegionMap region={page.region ?? "kanto"} />
       <HabitatBackdrop habitat={first.habitat} />
 
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
@@ -301,7 +330,7 @@ export default function Folio({ page }: { page: FolioPage }) {
               <span key={m.id} style={{ display: "contents" }}>
                 {i > 0 && m.from === page.members[i - 1].id && (
                   <span className="lin-step">
-                    <span className="lin-arrow" aria-hidden="true">➳</span>
+                    <InkArrow />
                     {m.method ?? ""}
                   </span>
                 )}
