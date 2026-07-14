@@ -24,28 +24,6 @@ function seeded(id: number) {
 
 const lower = (s: string) => s[0].toLowerCase() + s.slice(1);
 
-/* "FireRed · LeafGreen · HeartGold" -> "FireRed, LeafGreen and HeartGold" */
-function prettyGames(games: string): string {
-  const parts = games.split(" · ");
-  if (parts.length === 1) return parts[0];
-  return parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
-}
-
-/* run-on account of where a creature is found, in the explorer's voice */
-function rangeProse(sp: Species, parentName: string | null, method: string | null): string {
-  const rows = rangeRows(sp);
-  if (rows.length === 0) {
-    if (parentName)
-      return `Not taken in the wild; it is raised up from ${parentName}${method ? ", " + lower(method) : ""}.`;
-    return "Not to be taken in the wild by any means known to me.";
-  }
-  const shown = rows.slice(0, 4);
-  const parts = shown.map((r) => `in ${prettyGames(r.games)}, about ${r.places}`);
-  let out = "Met with " + parts.join("; ");
-  if (rows.length > shown.length) out += "; and in sundry regions besides";
-  return out + ".";
-}
-
 /* a wobbly inked underline drawn beneath a heading */
 function InkUnderline({ w = 320 }: { w?: number }) {
   return (
@@ -101,23 +79,30 @@ function typesLine(sp: Species): string {
   return "Of the " + sp.types.map((x) => TYPE_LABEL[x] ?? x).join(" and ") + " kind";
 }
 
-function Measures({ sp }: { sp: Species }) {
+/* a hand-lettered record heading with an inked underline the width of the label */
+function RecLabel({ text, rot = -1 }: { text: string; rot?: number }) {
   return (
-    <div className="scrawl measures">
-      <span className="sc-label" style={{ ["--sc-rot" as string]: "-2deg" }}>
-        by my measure
+    <span style={{ display: "inline-block", marginBottom: ".5rem" }}>
+      <span className="rec-label" style={{ ["--rec-rot" as string]: `${rot}deg` }}>
+        {text}
       </span>
-      <div className="sc-body">
-        {STAT_LABELS.map(([key, label]) => (
-          <span className="stat" key={key}>
-            <span className="st-key">{label}</span>
-            <span className="st-val">{sp.stats[key]}</span>
-            <span className="st-bar">
-              <i style={{ ["--v" as string]: sp.stats[key] }} />
-            </span>
+      <InkUnderline w={180} />
+    </span>
+  );
+}
+
+function StatGrid({ sp }: { sp: Species }) {
+  return (
+    <div className="m-grid">
+      {STAT_LABELS.map(([key, label]) => (
+        <span className="stat" key={key}>
+          <span className="st-key">{label}</span>
+          <span className="st-val">{sp.stats[key]}</span>
+          <span className="st-bar">
+            <i style={{ ["--v" as string]: sp.stats[key] }} />
           </span>
-        ))}
-      </div>
+        </span>
+      ))}
     </div>
   );
 }
@@ -139,8 +124,8 @@ function Entry({
   const imgRot = (rand() * 5 - 2.5).toFixed(2);
   const nameRot = (rand() * 5.5 - 3).toFixed(2);
   const capRot = (rand() * 4 - 2).toFixed(2);
-  const scRotA = (rand() * 5 - 2.5).toFixed(2);
-  const scRotB = (rand() * 5 - 2.5).toFixed(2);
+  const scRotA = Number((rand() * 5 - 2.5).toFixed(2));
+  const scRotB = Number((rand() * 5 - 2.5).toFixed(2));
   const framed = rand() < 0.55;
 
   const quote = sp.flavor.length
@@ -165,64 +150,95 @@ function Entry({
         </header>
       )}
 
-      <figure
-        className={`specimen side-${side}`}
-        style={{ ["--img-w" as string]: `${imgW}px` }}
-      >
-        <span className="plate-wrap" style={{ ["--img-rot" as string]: `${imgRot}deg` }}>
-          <img
-            src={`/art/${sp.id}.png`}
-            alt={`Illustrated plate of ${sp.name}`}
-            width={475}
-            height={475}
-            loading={member.from === null ? "eager" : "lazy"}
-          />
-          {framed && <InkFrame />}
-        </span>
-        {quote && (
-          <figcaption style={{ ["--cap-rot" as string]: `${capRot}deg` }}>
-            “{quote.text}”
-            <span className="src"> ({quote.version})</span>
-          </figcaption>
-        )}
-        <span className="plate-tag">plate {roman(sp.id)}</span>
-      </figure>
+      <div className="entry-body">
+        <figure
+          className={`specimen side-${side}`}
+          style={{ ["--img-w" as string]: `${imgW}px` }}
+        >
+          <span className="plate-wrap" style={{ ["--img-rot" as string]: `${imgRot}deg` }}>
+            <img
+              src={`/art/${sp.id}.png`}
+              alt={`Illustrated plate of ${sp.name}`}
+              width={475}
+              height={475}
+              loading={member.from === null ? "eager" : "lazy"}
+            />
+            {framed && <InkFrame />}
+          </span>
+          {quote && (
+            <figcaption style={{ ["--cap-rot" as string]: `${capRot}deg` }}>
+              “{quote.text}”
+              <span className="src"> ({quote.version})</span>
+            </figcaption>
+          )}
+          <span className="plate-tag">plate {roman(sp.id)}</span>
+        </figure>
 
-      <div className="hand-notes">
-        {paras.map((p, i) => (
-          <p key={i} className={i === 0 ? "dropcap" : undefined}>
-            {p}
-          </p>
-        ))}
-        {note?.scribe && <span className="quill">{note.scribe}</span>}
+        <div className="hand-notes">
+          {paras.map((p, i) => (
+            <p key={i} className={i === 0 ? "dropcap" : undefined}>
+              {p}
+            </p>
+          ))}
+          {note?.scribe && <span className="quill">{note.scribe}</span>}
+        </div>
       </div>
 
-      <div className="scrawls">
-        <Measures sp={sp} />
+      <div className="records">
+        <div className="record rec-vital">
+          <RecLabel text="the vital record" rot={-1.5} />
+          <dl className="rec-dl">
+            <dt>Height</dt>
+            <dd>{sp.height.toFixed(1)} m</dd>
+            <dt>Weight</dt>
+            <dd>{sp.weight.toFixed(1)} kg</dd>
+            <dt>{sp.abilities.length > 1 ? "Faculties" : "Faculty"}</dt>
+            <dd>{sp.abilities.map((a) => a.name + (a.hidden ? " (hidden)" : "")).join(", ")}</dd>
+            <dt>Haunt</dt>
+            <dd style={{ textTransform: "capitalize" }}>{sp.habitat.replace("-", " ")}</dd>
+          </dl>
+        </div>
 
-        <div className="scrawl">
-          <span className="sc-label" style={{ ["--sc-rot" as string]: `${scRotA}deg` }}>
-            where it is met
-          </span>
-          <p className="sc-body">{rangeProse(sp, parent?.name ?? null, member.method)}</p>
+        <div className="record rec-measures">
+          <RecLabel text="by my own measure" rot={scRotA} />
+          <StatGrid sp={sp} />
+        </div>
+
+        <div className="record rec-range">
+          <RecLabel text="where it is found" rot={scRotB} />
+          <dl className="rec-dl">
+            {rangeRows(sp).length > 0 ? (
+              rangeRows(sp).map((r) => (
+                <span key={r.games} style={{ display: "contents" }}>
+                  <dt>{r.games}</dt>
+                  <dd>{r.places}</dd>
+                </span>
+              ))
+            ) : (
+              <>
+                <dt>All games</dt>
+                <dd>
+                  {parent
+                    ? `Not taken in the wild; raised from ${parent.name}${member.method ? ", " + lower(member.method) : ""}.`
+                    : "Not to be taken in the wild."}
+                </dd>
+              </>
+            )}
+          </dl>
         </div>
 
         {sp.moves.length > 0 && (
-          <div className="scrawl">
-            <span className="sc-label" style={{ ["--sc-rot" as string]: `${scRotB}deg` }}>
-              arts it is seen to know
-            </span>
-            <p className="sc-body">
-              {sp.moves.slice(0, 7).map((m, i, arr) => (
-                <span key={m.name}>
-                  {m.name}{" "}
-                  <span className="lvl">
-                    ({m.level <= 1 ? "from birth" : roman(m.level)})
-                  </span>
-                  {i < arr.length - 1 ? ", " : "."}
-                </span>
+          <div className="record rec-arts">
+            <RecLabel text="arts it is known to use" rot={-1} />
+            <ol>
+              {sp.moves.slice(0, 6).map((m) => (
+                <li key={m.name}>
+                  <span className="art-lvl">{m.level <= 1 ? "birth" : roman(m.level)}</span>
+                  <span className="art-name">{m.name}</span>
+                  <span className="art-desc">{m.desc}</span>
+                </li>
               ))}
-            </p>
+            </ol>
           </div>
         )}
       </div>

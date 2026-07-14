@@ -1199,3 +1199,85 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
   .specimen.side-left, .specimen.side-right { shape-outside: none; }
   .entry-hand-head .eh-name { transform: rotate(-1deg); }
 }
+
+/* ————————————————————————————————————————————————
+   Records — the middle ground: detailed data, drawn by hand
+   (hand-lettered annotated ledgers, legible but never boxed)
+   ———————————————————————————————————————————————— */
+
+.entry-body { display: flow-root; }
+
+.records {
+  margin-top: 1.8rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 38%, transparent);
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+  gap: 1.8rem clamp(2rem, 4vw, 3.4rem);
+  align-items: start;
+}
+@media (max-width: 720px) { .records { grid-template-columns: 1fr; } }
+
+.record { min-width: 0; }
+.record .rec-label {
+  font-family: var(--hand-note);
+  font-size: 1.3rem;
+  color: var(--rubric);
+  display: inline-block;
+  transform: rotate(var(--rec-rot, -1deg));
+  margin-bottom: .1rem;
+}
+.record .rec-rule { height: 9px; margin-bottom: .55rem; opacity: .8; }
+
+/* definition lists, aligned but unboxed */
+.rec-dl { display: grid; grid-template-columns: auto 1fr; gap: .34rem 1rem; }
+.rec-dl dt {
+  font-family: var(--smallcaps);
+  font-size: .78rem;
+  letter-spacing: .1em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.rec-dl dd { font-style: italic; font-size: 1.02rem; color: var(--ink); text-wrap: pretty; }
+
+/* base measures — handwritten numerals over ink bars */
+.rec-measures .m-grid {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: .6rem 1.4rem;
+}
+.rec-measures .stat { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
+.rec-measures .st-key { font-family: var(--smallcaps); font-size: .66rem; letter-spacing: .05em; color: var(--ink-faint); margin-bottom: .16rem; }
+.rec-measures .st-val { font-family: var(--hand-display); font-weight: 700; font-size: 1.95rem; color: var(--ink); }
+.rec-measures .st-bar { width: 2.5rem; height: 3px; margin-top: .12rem; background: color-mix(in srgb, var(--ink-faint) 32%, transparent); }
+.rec-measures .st-bar i { display: block; height: 100%; width: calc(var(--v) / 180 * 100%); background: var(--rubric); }
+
+/* arts — level, name, and the nature of the art, restored */
+.rec-arts ol { list-style: none; }
+.rec-arts li {
+  display: grid;
+  grid-template-columns: 3.6rem 1fr;
+  gap: .05rem .8rem;
+  padding: .34rem 0;
+  border-bottom: 1px dotted color-mix(in srgb, var(--ink-faint) 26%, transparent);
+}
+.rec-arts li:last-child { border-bottom: none; }
+.rec-arts .art-lvl {
+  grid-row: span 2;
+  font-family: var(--smallcaps);
+  font-size: .8rem;
+  letter-spacing: .02em;
+  color: var(--rubric);
+  padding-top: .2rem;
+  white-space: nowrap;
+}
+.rec-arts .art-name { font-size: 1.06rem; color: var(--ink); }
+.rec-arts .art-desc { font-style: italic; font-size: .93rem; color: var(--ink-faint); text-wrap: pretty; }
+
+/* on narrow screens the game clusters are wide, so stack the range list */
+@media (max-width: 720px) {
+  .rec-range .rec-dl { grid-template-columns: 1fr; gap: .05rem; }
+  .rec-range .rec-dl dt { margin-top: .5rem; }
+  .rec-range .rec-dl dd { margin-left: .3rem; }
+}
