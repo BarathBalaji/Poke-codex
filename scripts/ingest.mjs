@@ -18,7 +18,15 @@ import path from "node:path";
 const MIRROR = "https://raw.githubusercontent.com/PokeAPI/api-data/master/data/api/v2";
 const ART = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork";
 const CACHE = ".cache";
-const KANTO_MAX = 151;
+/* which volume to build: `node scripts/ingest.mjs [kanto|johto]` */
+const REGIONS = {
+  kanto: { label: "Kanto", min: 1, max: 151 },
+  johto: { label: "Johto", min: 152, max: 251 },
+};
+const REGION = process.argv[2] ?? "kanto";
+const CFG = REGIONS[REGION];
+if (!CFG) throw new Error(`unknown region: ${REGION}`);
+const { min: DEX_MIN, max: DEX_MAX } = CFG;
 
 /** Gen 1-5 version ids in play order. */
 const GEN15_VERSIONS = [
@@ -147,7 +155,7 @@ async function main() {
   await mkdir(path.join("public", "art"), { recursive: true });
   await mkdir("content", { recursive: true });
 
-  const ids = Array.from({ length: KANTO_MAX }, (_, i) => i + 1);
+  const ids = Array.from({ length: DEX_MAX - DEX_MIN + 1 }, (_, i) => i + DEX_MIN);
 
   console.log("fetching species, pokemon, encounters ...");
   const species = await pool(ids, 12, (id) =>
@@ -264,18 +272,20 @@ async function main() {
     };
   }
 
-  // Evolution-line pages: walk each chain, keep Kanto members, one page per chain.
-  function walkChain(node, parent, acc) {
+  // Evolution-line pages: walk each chain, keep this region's members, one page
+  // per chain. `parentId` is the immediate ancestor's national id even when it
+  // belongs to an earlier region, so cross-generation evolutions (e.g. Crobat
+  // from Golbat) still record where they are raised from.
+  function walkChain(node, parentId, acc) {
     const id = Number(node.species.url.match(/\/(\d+)\/?$/)[1]);
-    if (id <= KANTO_MAX) {
+    if (id >= DEX_MIN && id <= DEX_MAX) {
       acc.push({
         id,
-        from: parent,
-        method: parent ? formatEvolution(node.evolution_details) : null,
+        from: parentId,
+        method: parentId ? formatEvolution(node.evolution_details) : null,
       });
-      parent = id;
     }
-    for (const child of node.evolves_to) walkChain(child, parent, acc);
+    for (const child of node.evolves_to) walkChain(child, id, acc);
   }
 
   const pages = [];
@@ -292,9 +302,10 @@ async function main() {
     p.slug = speciesOut[p.members[0].id].name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   });
 
-  const out = { generatedAt: new Date().toISOString(), region: "Kanto", species: speciesOut, pages };
-  await writeFile("content/kanto.json", JSON.stringify(out, null, 1));
-  console.log(`wrote content/kanto.json: ${Object.keys(speciesOut).length} species, ${pages.length} folio pages`);
+  pages.forEach((p) => { p.region = REGION; });
+  const out = { generatedAt: new Date().toISOString(), region: CFG.label, species: speciesOut, pages };
+  await writeFile(`content/${REGION}.json`, JSON.stringify(out, null, 1));
+  console.log(`wrote content/${REGION}.json: ${Object.keys(speciesOut).length} species, ${pages.length} folio pages`);
 }
 
 main().catch((err) => {

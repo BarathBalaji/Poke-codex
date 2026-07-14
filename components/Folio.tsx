@@ -9,6 +9,7 @@ import {
   pages,
   STAT_LABELS,
   TYPE_LABEL,
+  REGION_LABEL,
 } from "@/lib/data";
 import HabitatBackdrop from "@/components/HabitatBackdrop";
 import RegionMap from "@/components/RegionMap";
@@ -144,7 +145,9 @@ function Entry({
 }) {
   const sp = getSpecies(member.id);
   const note = getNote(member.id);
-  const parent = member.from ? getSpecies(member.from) : null;
+  // a cross-generation pre-evolution may fall outside this codex (e.g. a
+  // later-gen baby); treat it as no recorded parent if we have no plate for it.
+  const parent = member.from != null ? getSpecies(member.from) ?? null : null;
 
   const rand = seeded(sp.id);
   const side = rand() < 0.5 ? "left" : "right";
@@ -289,6 +292,7 @@ export default function Folio({ page }: { page: FolioPage }) {
     : page.members.some((m) => getSpecies(m.id).isLegendary)
       ? "a legendary creature"
       : null;
+  const regionLabel = REGION_LABEL[page.region ?? "kanto"] ?? "Kanto";
 
   return (
     <article className="folio paper">
@@ -304,7 +308,7 @@ export default function Folio({ page }: { page: FolioPage }) {
 
       <div className="folio-inner">
         <p className="leaf-running">
-          Codex Monstrorum <span className="amp">·</span> Regnum Kanto{" "}
+          Codex Monstrorum <span className="amp">·</span> Regnum {regionLabel}{" "}
           <span className="amp">·</span> folio {roman(page.folio)}
         </p>
 
@@ -313,6 +317,12 @@ export default function Folio({ page }: { page: FolioPage }) {
           <h1 className="leaf-name">{lineName}</h1>
           <InkUnderline w={420} />
           <p className="leaf-genus">the {first.genus} Pokémon{solo ? "" : " and its kin"}</p>
+          {solo && page.members[0].from != null && getSpecies(page.members[0].from) && (
+            <p className="leaf-from">
+              raised from {getSpecies(page.members[0].from).name}
+              {page.members[0].method ? `, ${lower(page.members[0].method)}` : ""}
+            </p>
+          )}
           <p className="leaf-crests">
             <span>{typesLine(first)}</span>
             {legendMark && (

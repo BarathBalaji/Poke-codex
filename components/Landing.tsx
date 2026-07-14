@@ -3,6 +3,9 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import RedSilhouette from "@/components/RedSilhouette";
+import { regionStartFolio } from "@/lib/data";
+
+const JOHTO_FOLIO = regionStartFolio("johto");
 
 export default function Landing() {
   const router = useRouter();
@@ -10,10 +13,10 @@ export default function Landing() {
   const [photoOk, setPhotoOk] = useState(true);
   const coverRef = useRef<HTMLDivElement>(null);
 
-  const openCodex = () => {
+  const openCodex = (folio = 1) => {
     if (opening) return;
     setOpening(true);
-    window.setTimeout(() => router.push("/codex/1"), 950);
+    window.setTimeout(() => router.push(`/codex/${folio}`), 950);
   };
 
   return (
@@ -59,8 +62,8 @@ export default function Landing() {
           <p className="hero-eyebrow">An illuminated bestiary of the first kingdom</p>
           <h1 className="hero-title">Codex Monstrorum</h1>
           <p className="hero-sub">
-            The creatures of Kanto, drawn and recorded in the manner of the old
-            almanacs, from the annals of the first five generations.
+            The creatures of Kanto and Johto, drawn and recorded in the manner
+            of the old almanacs, from the annals of the first five generations.
           </p>
           <a className="hero-cta" href="#tome">
             Descend to the codex
@@ -76,16 +79,16 @@ export default function Landing() {
         <div
           ref={coverRef}
           className={`tome${opening ? " opening" : ""}`}
-          onClick={openCodex}
+          onClick={() => openCodex(1)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              openCodex();
+              openCodex(1);
             }
           }}
           role="button"
           tabIndex={0}
-          aria-label="Open the codex"
+          aria-label="Open the codex at Kanto"
         >
           <div className="tome-pages" aria-hidden="true" />
           <div className="tome-cover">
@@ -101,15 +104,27 @@ export default function Landing() {
                 <circle cx="60" cy="60" r="16" fill="none" strokeWidth="4" />
                 <circle cx="60" cy="60" r="6" />
               </svg>
-              <span className="tooling-sub">Regnum Kanto</span>
-              <span className="tooling-foot">CLI creatures · recorded in LXXVIII folios</span>
+              <span className="tooling-sub">Kanto · Johto</span>
+              <span className="tooling-foot">CCLI creatures · two kingdoms</span>
             </div>
           </div>
         </div>
 
-        <p className="study-invite">
-          {opening ? "The cover lifts." : "Lay a hand upon the cover to open it."}
-        </p>
+        {opening ? (
+          <p className="study-invite">The cover lifts.</p>
+        ) : (
+          <div className="kingdom-entries">
+            <button className="kingdom-btn" onClick={() => openCodex(1)}>
+              <span className="kb-eyebrow">begin the first kingdom</span>
+              <span className="kb-name">Kanto</span>
+            </button>
+            <span className="kingdom-div" aria-hidden="true">❦</span>
+            <button className="kingdom-btn" onClick={() => openCodex(JOHTO_FOLIO)}>
+              <span className="kb-eyebrow">begin the second kingdom</span>
+              <span className="kb-name">Johto</span>
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );

@@ -174,7 +174,7 @@ function SearchOverlay({
     const query = q.trim().toLowerCase();
     if (!query) return [];
     const asNumber = Number(query.replace(/^no\.?\s*/, ""));
-    if (Number.isInteger(asNumber) && asNumber >= 1 && asNumber <= 151) {
+    if (Number.isInteger(asNumber) && asNumber >= 1 && asNumber <= allSpecies.length) {
       const sp = allSpecies[asNumber - 1];
       return [sp];
     }

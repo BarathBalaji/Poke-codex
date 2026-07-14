@@ -1,4 +1,5 @@
 import kanto from "@/content/kanto.json";
+import johto from "@/content/johto.json";
 import notes from "@/content/notes.json";
 
 export interface Species {
@@ -39,20 +40,45 @@ export interface SpeciesNote {
   scribe?: string;
 }
 
-const data = kanto as unknown as {
+type Volume = {
   region: string;
   species: Record<string, Species>;
   pages: FolioPage[];
 };
 
+/** The codex is one continuous manuscript: Kanto folios, then Johto folios. */
+export const REGION_ORDER = ["kanto", "johto"] as const;
+export const REGION_LABEL: Record<string, string> = { kanto: "Kanto", johto: "Johto" };
+
+const volumes: Record<string, Volume> = {
+  kanto: kanto as unknown as Volume,
+  johto: johto as unknown as Volume,
+};
+
+const speciesById: Record<string, Species> = {
+  ...(volumes.kanto.species),
+  ...(volumes.johto.species),
+};
+
 const speciesNotes = notes as unknown as Record<string, SpeciesNote>;
 
-export const pages: FolioPage[] = data.pages;
-export const getSpecies = (id: number): Species => data.species[String(id)];
+/** Pages from every volume, folio numbers made continuous across the codex. */
+export const pages: FolioPage[] = REGION_ORDER.flatMap((r) =>
+  volumes[r].pages.map((p) => ({ ...p, region: r })),
+).map((p, i) => ({ ...p, folio: i + 1 }));
+
+export const getSpecies = (id: number): Species => speciesById[String(id)];
 export const getNote = (id: number): SpeciesNote | undefined => speciesNotes[String(id)];
 export const pageCount = pages.length;
 
-export const allSpecies: Species[] = Object.values(data.species).sort((a, b) => a.id - b.id);
+export const allSpecies: Species[] = Object.values(speciesById).sort((a, b) => a.id - b.id);
+export const maxDex = allSpecies.length ? allSpecies[allSpecies.length - 1].id : 151;
+
+/** Folio number where a region's pages begin (1-based). */
+export function regionStartFolio(region: string): number {
+  const p = pages.find((x) => x.region === region);
+  return p ? p.folio : 1;
+}
 
 /** Folio page that contains a given national dex number. */
 export function folioForDex(dex: number): FolioPage | undefined {
