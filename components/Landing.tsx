@@ -49,7 +49,7 @@ export default function Landing() {
         {photoOk && (
           <img
             className="hero-photo"
-            src="/hero.jpg"
+            src="/japanese_cloud_landscape.webp"
             alt="The frontispiece: a lone figure upon a peak beneath a storm of golden cloud"
             onError={() => setPhotoOk(false)}
           />
