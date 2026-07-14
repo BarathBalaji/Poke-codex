@@ -7,6 +7,7 @@ import RedSilhouette from "@/components/RedSilhouette";
 export default function Landing() {
   const router = useRouter();
   const [opening, setOpening] = useState(false);
+  const [photoOk, setPhotoOk] = useState(true);
   const coverRef = useRef<HTMLDivElement>(null);
 
   const openCodex = () => {
@@ -40,6 +41,19 @@ export default function Landing() {
         </svg>
 
         <RedSilhouette className="red" aria-label="A lone trainer stands on the summit, ball in hand" />
+
+        {/* the illustrated frontispiece; covers the drawn scene when present */}
+        {photoOk && (
+          <img
+            className="hero-photo"
+            src="/hero.jpg"
+            alt="The frontispiece: a lone figure upon a peak beneath a storm of golden cloud"
+            onError={() => setPhotoOk(false)}
+          />
+        )}
+        <div className="hero-grain" aria-hidden="true" />
+        <div className="hero-scrim" aria-hidden="true" />
+        <div className="hero-frame" aria-hidden="true" />
 
         <div className="hero-copy">
           <p className="hero-eyebrow">An illuminated bestiary of the first kingdom</p>
