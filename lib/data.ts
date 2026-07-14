@@ -103,6 +103,15 @@ export const TYPE_LABEL: Record<string, string> = {
   steel: "Steel", fairy: "Fairy",
 };
 
+/** Muted, parchment-friendly cast of each type; the folio takes this hue. */
+export const TYPE_TINT: Record<string, string> = {
+  normal: "#9a8a63", fire: "#b5532e", water: "#3f6b8a", electric: "#b58f2b",
+  grass: "#5f7a37", ice: "#4f8391", fighting: "#94402c", poison: "#7a4a86",
+  ground: "#9c7638", flying: "#6a76a3", psychic: "#a6497a", bug: "#6f7d2e",
+  rock: "#84703f", ghost: "#5b4a78", dragon: "#4a5aa0", dark: "#4a3f3a",
+  steel: "#5f7484", fairy: "#b06a90",
+};
+
 /** Ordered version clusters for the range table. */
 const VERSION_CLUSTERS: [string, string[]][] = [
   ["Red · Blue", ["red", "blue"]],

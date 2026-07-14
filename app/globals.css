@@ -50,6 +50,7 @@
   --gold-bright:    #d9ab52;
   --desk:           #171009;
   --verdigris:      #56603f;
+  --tint:           transparent; /* folios override with their type's cast */
 
   --serif: 'IM Fell English', 'Palatino Linotype', Palatino, Georgia, serif;
   --smallcaps: 'IM Fell English SC', 'Palatino Linotype', Georgia, serif;
@@ -181,6 +182,16 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
   margin: 0;
   padding: clamp(1.6rem, 4vw, 3.6rem) clamp(1.1rem, 6vw, 6rem) clamp(2.4rem, 4vw, 3.2rem);
   overflow: hidden;
+}
+/* the type's cast, washed into the parchment from the top and edges */
+.folio.paper {
+  background:
+    linear-gradient(158deg, color-mix(in srgb, var(--tint) 26%, transparent) 0%, color-mix(in srgb, var(--tint) 7%, transparent) 48%, transparent 82%),
+    radial-gradient(ellipse 90% 55% at 50% 4%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 62%),
+    var(--paper-foxing),
+    var(--paper-fiber),
+    var(--paper-noise),
+    radial-gradient(ellipse 90% 80% at 50% 35%, var(--parchment) 30%, var(--parchment-deep) 78%, var(--parchment-edge) 100%);
 }
 /* the writing sits in a journal measure inside the full-bleed sheet */
 .folio > * { position: relative; z-index: 1; }
@@ -1303,15 +1314,15 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 .folio > .region-map { z-index: 0; }
 .region-map {
   position: absolute;
-  inset: clamp(2rem, 8vh, 7rem) 0 auto 0;
-  height: min(78%, 900px);
+  inset: clamp(1.5rem, 6vh, 5rem) 0 auto 0;
+  height: min(82%, 1000px);
   display: flex;
   justify-content: center;
   pointer-events: none;
-  opacity: .05;
+  opacity: .09;
   mix-blend-mode: multiply;
 }
-.region-map svg { width: min(1100px, 92%); height: 100%; }
+.region-map svg { width: min(1180px, 94%); height: 100%; }
 
 /* ————— illustrated frontispiece over the hero ————— */
 .hero-photo {

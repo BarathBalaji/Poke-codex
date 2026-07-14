@@ -1,35 +1,63 @@
 /**
- * A faint antique chart of the region, drawn as a full-page watermark behind
- * the folio. Original stylised cartography (not a game map) so it is safe to
- * ship and sits comfortably in the manuscript's own hand. Rendered very low
- * opacity with the inked wobble filter for a hand-drawn feel.
+ * A faint antique chart of the region behind each folio. Original stylised
+ * cartography that echoes the game's town-and-route layout (Nintendo's own
+ * maps are copyright, so this is drawn from scratch) and reads clearly as a
+ * hand-inked manuscript map: named settlements, dotted roads, a coastline,
+ * mountains, a compass rose. Rendered low-opacity with the inked wobble.
  */
 
 const INK = "#4a3a22";
 
-function seaHatch(y0: number, count: number, w: number) {
+type Place = { x: number; y: number; name: string; big?: boolean };
+
+function Sea() {
   const lines = [];
-  for (let i = 0; i < count; i++) {
-    const y = y0 + i * 26;
+  for (let i = 0; i < 22; i++) {
+    const y = 40 + i * 30;
     lines.push(
       <path
         key={i}
-        d={`M20 ${y} q ${w * 0.14} -10 ${w * 0.28} 0 t ${w * 0.28} 0 t ${w * 0.28} 0`}
+        d={`M10 ${y} q 60 -9 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0`}
         fill="none"
         stroke={INK}
-        strokeWidth="1.4"
-        opacity={0.5}
+        strokeWidth="1.2"
+        opacity="0.4"
       />,
     );
   }
-  return lines;
+  return <g>{lines}</g>;
 }
 
-function Town({ x, y, r = 6 }: { x: number; y: number; r?: number }) {
+function Roads({ d }: { d: string }) {
+  return (
+    <path
+      d={d}
+      fill="none"
+      stroke={INK}
+      strokeWidth="2.4"
+      strokeDasharray="1 10"
+      strokeLinecap="round"
+      opacity="0.9"
+    />
+  );
+}
+
+function Settlement({ p }: { p: Place }) {
+  const r = p.big ? 9 : 6;
   return (
     <g>
-      <circle cx={x} cy={y} r={r} fill="none" stroke={INK} strokeWidth="2.2" />
-      <circle cx={x} cy={y} r={r * 0.32} fill={INK} />
+      <circle cx={p.x} cy={p.y} r={r} fill="#e9d9b4" stroke={INK} strokeWidth="2.4" />
+      {p.big && <circle cx={p.x} cy={p.y} r={r * 0.4} fill={INK} />}
+      <text
+        x={p.x + r + 6}
+        y={p.y + 4}
+        fill={INK}
+        fontSize="18"
+        fontFamily="'IM Fell English SC', Georgia, serif"
+        letterSpacing="1"
+      >
+        {p.name}
+      </text>
     </g>
   );
 }
@@ -37,150 +65,118 @@ function Town({ x, y, r = 6 }: { x: number; y: number; r?: number }) {
 function Mountains({ x, y, n = 3 }: { x: number; y: number; n?: number }) {
   const peaks = [];
   for (let i = 0; i < n; i++) {
-    const px = x + i * 34;
-    peaks.push(
-      <path key={i} d={`M${px} ${y} l 22 -34 l 22 34`} fill="none" stroke={INK} strokeWidth="2.4" />,
-    );
+    const px = x + i * 30;
+    peaks.push(<path key={i} d={`M${px} ${y} l 20 -30 l 20 30`} fill="none" stroke={INK} strokeWidth="2.4" />);
   }
   return <g>{peaks}</g>;
-}
-
-function Forest({ x, y }: { x: number; y: number }) {
-  const trees = [];
-  for (let i = 0; i < 6; i++) {
-    const tx = x + (i % 3) * 26;
-    const ty = y + Math.floor(i / 3) * 22;
-    trees.push(<circle key={i} cx={tx} cy={ty} r="9" fill="none" stroke={INK} strokeWidth="2" />);
-  }
-  return <g>{trees}</g>;
 }
 
 function Compass({ x, y }: { x: number; y: number }) {
   return (
     <g stroke={INK} fill="none" strokeWidth="2">
-      <circle cx={x} cy={y} r="46" />
-      <circle cx={x} cy={y} r="30" strokeWidth="1.4" />
-      <path d={`M${x} ${y - 62} L ${x + 12} ${y} L ${x} ${y + 62} L ${x - 12} ${y} Z`} fill={INK} opacity="0.5" />
-      <path d={`M${x - 62} ${y} L ${x} ${y + 12} L ${x + 62} ${y} L ${x} ${y - 12} Z`} fill={INK} opacity="0.3" />
+      <circle cx={x} cy={y} r="44" />
+      <circle cx={x} cy={y} r="28" strokeWidth="1.3" />
+      <path d={`M${x} ${y - 58} L ${x + 11} ${y} L ${x} ${y + 58} L ${x - 11} ${y} Z`} fill={INK} opacity="0.5" />
+      <path d={`M${x - 58} ${y} L ${x} ${y + 11} L ${x + 58} ${y} L ${x} ${y - 11} Z`} fill={INK} opacity="0.3" />
+      <text x={x - 5} y={y - 48} fill={INK} fontSize="15" fontFamily="'IM Fell English SC', serif">N</text>
     </g>
   );
 }
 
-function KantoChart() {
+/* stylised Kanto: western coast, central plains, southern isles */
+const KANTO: Place[] = [
+  { x: 250, y: 250, name: "Pewter" },
+  { x: 250, y: 470, name: "Viridian" },
+  { x: 250, y: 610, name: "Pallet", big: true },
+  { x: 560, y: 205, name: "Cerulean" },
+  { x: 560, y: 400, name: "Saffron", big: true },
+  { x: 430, y: 400, name: "Celadon" },
+  { x: 560, y: 585, name: "Vermilion" },
+  { x: 745, y: 340, name: "Lavender" },
+  { x: 470, y: 665, name: "Fuchsia" },
+  { x: 250, y: 700, name: "Cinnabar" },
+  { x: 120, y: 220, name: "Indigo" },
+];
+const KANTO_ROADS =
+  "M250 610 L 250 470 L 250 250 M 250 250 L 400 235 L 560 205 M 560 205 L 560 400 L 560 585 " +
+  "M 560 400 L 430 400 M 560 400 L 745 340 M 560 205 L 700 270 L 745 340 " +
+  "M 430 400 L 470 665 L 560 585 M 470 665 L 250 700 M 250 470 L 120 220";
+
+/* stylised Johto: peninsulas to the west of Kanto */
+const JOHTO: Place[] = [
+  { x: 720, y: 470, name: "New Bark", big: true },
+  { x: 620, y: 430, name: "Cherrygrove" },
+  { x: 520, y: 330, name: "Violet" },
+  { x: 470, y: 470, name: "Azalea" },
+  { x: 420, y: 400, name: "Goldenrod", big: true },
+  { x: 380, y: 250, name: "Ecruteak" },
+  { x: 240, y: 300, name: "Olivine" },
+  { x: 180, y: 470, name: "Cianwood" },
+  { x: 520, y: 200, name: "Mahogany" },
+  { x: 620, y: 250, name: "Blackthorn" },
+];
+const JOHTO_ROADS =
+  "M720 470 L 620 430 L 520 330 L 520 200 M 520 330 L 470 470 L 420 400 L 380 250 " +
+  "M 380 250 L 240 300 L 180 470 M 380 250 L 520 200 L 620 250 M 620 430 L 420 400";
+
+function Chart({ places, roads, coast, mts, isles }: {
+  places: Place[]; roads: string; coast: string; mts: [number, number][]; isles: string[];
+}) {
   return (
     <>
-      {seaHatch(70, 20, 960)}
-      {/* landmass: a wandering coastline */}
-      <path
-        d="M250 210
-           C 300 150, 420 150, 470 200
-           C 520 170, 600 180, 630 230
-           C 700 240, 760 300, 740 370
-           C 780 420, 770 500, 710 540
-           C 720 600, 660 650, 590 640
-           C 540 690, 450 680, 420 630
-           C 350 650, 290 610, 300 550
-           C 240 530, 220 460, 260 420
-           C 220 380, 220 280, 250 210 Z"
-        fill="#e9d9b4"
-        stroke={INK}
-        strokeWidth="3"
-        opacity="0.55"
-      />
-      {/* islands */}
-      <path d="M330 690 c 20 -18 52 -14 58 8 c 6 22 -22 40 -46 30 c -20 -8 -24 -28 -12 -38 Z" fill="none" stroke={INK} strokeWidth="2.4" />
-      <path d="M690 600 c 16 -12 40 -8 44 8 c 4 16 -18 28 -36 20 Z" fill="none" stroke={INK} strokeWidth="2.4" />
-      {/* routes */}
-      <path
-        d="M330 300 L 430 260 L 520 300 L 560 400 L 500 470 L 560 540 L 470 590 M 520 300 L 640 340 L 660 460"
-        fill="none"
-        stroke={INK}
-        strokeWidth="2"
-        strokeDasharray="2 9"
-        strokeLinecap="round"
-        opacity="0.85"
-      />
-      <Town x={330} y={300} />
-      <Town x={430} y={260} />
-      <Town x={520} y={300} />
-      <Town x={560} y={400} />
-      <Town x={500} y={470} />
-      <Town x={560} y={540} r={7} />
-      <Town x={470} y={590} />
-      <Town x={640} y={340} />
-      <Town x={660} y={460} />
-      <Mountains x={370} y={360} n={3} />
-      <Forest x={430} y={430} />
-      <Compass x={840} y={170} />
-      {/* a scaly sea beast */}
-      <path
-        d="M120 560 q 20 -26 46 -8 q 24 16 46 -2 q 22 -16 44 2"
-        fill="none"
-        stroke={INK}
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
+      <Sea />
+      <path d={coast} fill="#e9d9b4" stroke={INK} strokeWidth="3" opacity="0.5" />
+      {isles.map((d, i) => (
+        <path key={i} d={d} fill="none" stroke={INK} strokeWidth="2.2" />
+      ))}
+      <Roads d={roads} />
+      {mts.map(([x, y], i) => (
+        <Mountains key={i} x={x} y={y} />
+      ))}
+      {places.map((p) => (
+        <Settlement key={p.name} p={p} />
+      ))}
+      <Compass x={870} y={140} />
     </>
   );
 }
 
-function JohtoChart() {
-  return (
-    <>
-      {seaHatch(70, 20, 960)}
-      <path
-        d="M210 260
-           C 250 200, 330 190, 380 230
-           C 440 190, 520 210, 540 270
-           C 620 260, 700 300, 690 380
-           C 740 420, 720 500, 650 520
-           C 660 590, 590 640, 520 620
-           C 470 660, 380 650, 360 600
-           C 290 610, 250 560, 270 510
-           C 210 490, 200 400, 240 360
-           C 200 330, 190 290, 210 260 Z"
-        fill="#e9d9b4"
-        stroke={INK}
-        strokeWidth="3"
-        opacity="0.55"
-      />
-      <path d="M700 540 c 18 -14 44 -8 48 10 c 4 18 -22 30 -42 20 Z" fill="none" stroke={INK} strokeWidth="2.4" />
-      <path
-        d="M300 340 L 400 300 L 470 350 L 520 300 L 600 350 M 470 350 L 450 450 L 520 520 M 450 450 L 360 500"
-        fill="none"
-        stroke={INK}
-        strokeWidth="2"
-        strokeDasharray="2 9"
-        strokeLinecap="round"
-        opacity="0.85"
-      />
-      <Town x={300} y={340} />
-      <Town x={400} y={300} />
-      <Town x={470} y={350} r={7} />
-      <Town x={520} y={300} />
-      <Town x={600} y={350} />
-      <Town x={450} y={450} />
-      <Town x={520} y={520} />
-      <Town x={360} y={500} />
-      <Mountains x={540} y={430} n={3} />
-      <Forest x={330} y={410} />
-      <Compass x={820} y={180} />
-      <path
-        d="M120 580 q 20 -26 46 -8 q 24 16 46 -2 q 22 -16 44 2"
-        fill="none"
-        stroke={INK}
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </>
-  );
-}
+const KANTO_COAST =
+  "M80 140 L 660 130 C 720 150, 760 220, 740 300 C 800 340, 810 460, 740 520 " +
+  "C 770 600, 700 680, 600 660 C 560 720, 300 720, 300 660 C 200 690, 120 630, 150 540 " +
+  "C 90 500, 90 300, 130 260 C 90 220, 80 170, 80 140 Z";
+const JOHTO_COAST =
+  "M120 180 L 700 180 C 760 210, 770 300, 720 360 C 780 420, 760 540, 680 540 " +
+  "C 700 620, 600 660, 500 630 C 440 680, 320 680, 300 620 C 200 640, 120 580, 150 500 " +
+  "C 90 460, 100 260, 140 230 Z";
 
 export default function RegionMap({ region = "kanto" }: { region?: string }) {
+  const johto = region === "johto";
   return (
     <div className="region-map" aria-hidden="true">
-      <svg viewBox="0 0 1000 720" preserveAspectRatio="xMidYMid meet">
-        <g filter="url(#inked)">{region === "johto" ? <JohtoChart /> : <KantoChart />}</g>
+      <svg viewBox="0 0 1000 760" preserveAspectRatio="xMidYMid meet">
+        <g filter="url(#inked)">
+          {johto ? (
+            <Chart
+              places={JOHTO}
+              roads={JOHTO_ROADS}
+              coast={JOHTO_COAST}
+              mts={[[300, 260], [560, 300]]}
+              isles={["M700 600 c 20 -14 48 -8 52 12 c 4 18 -24 30 -46 18 Z"]}
+            />
+          ) : (
+            <Chart
+              places={KANTO}
+              roads={KANTO_ROADS}
+              coast={KANTO_COAST}
+              mts={[[350, 235], [690, 260]]}
+              isles={[
+                "M360 705 c 22 -16 54 -10 58 10 c 4 20 -26 34 -50 20 Z",
+                "M700 610 c 16 -12 40 -8 44 8 c 4 16 -20 26 -38 18 Z",
+              ]}
+            />
+          )}
+        </g>
       </svg>
     </div>
   );

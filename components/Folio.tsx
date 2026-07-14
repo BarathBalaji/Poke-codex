@@ -9,6 +9,7 @@ import {
   pages,
   STAT_LABELS,
   TYPE_LABEL,
+  TYPE_TINT,
   REGION_LABEL,
 } from "@/lib/data";
 import HabitatBackdrop from "@/components/HabitatBackdrop";
@@ -294,8 +295,10 @@ export default function Folio({ page }: { page: FolioPage }) {
       : null;
   const regionLabel = REGION_LABEL[page.region ?? "kanto"] ?? "Kanto";
 
+  const tint = TYPE_TINT[first.types[0]] ?? "#9a8a63";
+
   return (
-    <article className="folio paper">
+    <article className="folio paper" style={{ ["--tint" as string]: tint }}>
       <RegionMap region={page.region ?? "kanto"} />
       <HabitatBackdrop habitat={first.habitat} />
 
