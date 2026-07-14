@@ -22,6 +22,7 @@ const CACHE = ".cache";
 const REGIONS = {
   kanto: { label: "Kanto", min: 1, max: 151 },
   johto: { label: "Johto", min: 152, max: 251 },
+  hoenn: { label: "Hoenn", min: 252, max: 386 },
 };
 const REGION = process.argv[2] ?? "kanto";
 const CFG = REGIONS[REGION];

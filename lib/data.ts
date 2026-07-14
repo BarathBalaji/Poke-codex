@@ -1,5 +1,6 @@
 import kanto from "@/content/kanto.json";
 import johto from "@/content/johto.json";
+import hoenn from "@/content/hoenn.json";
 import notes from "@/content/notes.json";
 
 export interface Species {
@@ -46,18 +47,20 @@ type Volume = {
   pages: FolioPage[];
 };
 
-/** The codex is one continuous manuscript: Kanto folios, then Johto folios. */
-export const REGION_ORDER = ["kanto", "johto"] as const;
-export const REGION_LABEL: Record<string, string> = { kanto: "Kanto", johto: "Johto" };
+/** The codex is one continuous manuscript, kingdom after kingdom. */
+export const REGION_ORDER = ["kanto", "johto", "hoenn"] as const;
+export const REGION_LABEL: Record<string, string> = { kanto: "Kanto", johto: "Johto", hoenn: "Hoenn" };
 
 const volumes: Record<string, Volume> = {
   kanto: kanto as unknown as Volume,
   johto: johto as unknown as Volume,
+  hoenn: hoenn as unknown as Volume,
 };
 
 const speciesById: Record<string, Species> = {
   ...(volumes.kanto.species),
   ...(volumes.johto.species),
+  ...(volumes.hoenn.species),
 };
 
 const speciesNotes = notes as unknown as Record<string, SpeciesNote>;

@@ -150,33 +150,72 @@ const JOHTO_COAST =
   "C 700 620, 600 660, 500 630 C 440 680, 320 680, 300 620 C 200 640, 120 580, 150 500 " +
   "C 90 460, 100 260, 140 230 Z";
 
+/* stylised Hoenn: a broad sea broken by many isles */
+const HOENN: Place[] = [
+  { x: 230, y: 610, name: "Littleroot", big: true },
+  { x: 230, y: 500, name: "Petalburg" },
+  { x: 230, y: 330, name: "Rustboro" },
+  { x: 190, y: 690, name: "Dewford" },
+  { x: 410, y: 620, name: "Slateport" },
+  { x: 430, y: 470, name: "Mauville", big: true },
+  { x: 400, y: 300, name: "Fallarbor" },
+  { x: 470, y: 380, name: "Lavaridge" },
+  { x: 600, y: 300, name: "Fortree" },
+  { x: 680, y: 470, name: "Lilycove" },
+  { x: 760, y: 560, name: "Mossdeep" },
+  { x: 640, y: 620, name: "Sootopolis" },
+];
+const HOENN_ROADS =
+  "M230 610 L 230 500 L 230 330 M 230 500 L 410 620 L 430 470 M 430 470 L 230 500 " +
+  "M 430 470 L 400 300 L 470 380 M 430 470 L 600 300 L 680 470 L 760 560 " +
+  "M 680 470 L 640 620 L 410 620 M 230 690 L 230 610";
+const HOENN_COAST =
+  "M110 200 L 620 200 C 700 220, 720 300, 690 360 C 780 400, 800 520, 720 560 " +
+  "C 760 640, 660 700, 560 660 C 480 720, 300 720, 280 650 C 180 680, 110 600, 150 520 " +
+  "C 90 470, 90 280, 130 250 Z";
+
+const CHARTS: Record<string, React.ReactNode> = {
+  kanto: (
+    <Chart
+      places={KANTO}
+      roads={KANTO_ROADS}
+      coast={KANTO_COAST}
+      mts={[[350, 235], [690, 260]]}
+      isles={[
+        "M360 705 c 22 -16 54 -10 58 10 c 4 20 -26 34 -50 20 Z",
+        "M700 610 c 16 -12 40 -8 44 8 c 4 16 -20 26 -38 18 Z",
+      ]}
+    />
+  ),
+  johto: (
+    <Chart
+      places={JOHTO}
+      roads={JOHTO_ROADS}
+      coast={JOHTO_COAST}
+      mts={[[300, 260], [560, 300]]}
+      isles={["M700 600 c 20 -14 48 -8 52 12 c 4 18 -24 30 -46 18 Z"]}
+    />
+  ),
+  hoenn: (
+    <Chart
+      places={HOENN}
+      roads={HOENN_ROADS}
+      coast={HOENN_COAST}
+      mts={[[430, 320], [500, 400]]}
+      isles={[
+        "M300 700 c 20 -14 48 -8 52 12 c 4 18 -24 30 -46 18 Z",
+        "M560 690 c 16 -12 40 -8 44 8 c 4 16 -20 26 -38 18 Z",
+        "M770 620 c 14 -10 34 -6 38 8 c 3 14 -18 22 -32 14 Z",
+      ]}
+    />
+  ),
+};
+
 export default function RegionMap({ region = "kanto" }: { region?: string }) {
-  const johto = region === "johto";
   return (
     <div className="region-map" aria-hidden="true">
       <svg viewBox="0 0 1000 760" preserveAspectRatio="xMidYMid meet">
-        <g filter="url(#inked)">
-          {johto ? (
-            <Chart
-              places={JOHTO}
-              roads={JOHTO_ROADS}
-              coast={JOHTO_COAST}
-              mts={[[300, 260], [560, 300]]}
-              isles={["M700 600 c 20 -14 48 -8 52 12 c 4 18 -24 30 -46 18 Z"]}
-            />
-          ) : (
-            <Chart
-              places={KANTO}
-              roads={KANTO_ROADS}
-              coast={KANTO_COAST}
-              mts={[[350, 235], [690, 260]]}
-              isles={[
-                "M360 705 c 22 -16 54 -10 58 10 c 4 20 -26 34 -50 20 Z",
-                "M700 610 c 16 -12 40 -8 44 8 c 4 16 -20 26 -38 18 Z",
-              ]}
-            />
-          )}
-        </g>
+        <g filter="url(#inked)">{CHARTS[region] ?? CHARTS.kanto}</g>
       </svg>
     </div>
   );

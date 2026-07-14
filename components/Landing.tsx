@@ -6,6 +6,7 @@ import RedSilhouette from "@/components/RedSilhouette";
 import { regionStartFolio } from "@/lib/data";
 
 const JOHTO_FOLIO = regionStartFolio("johto");
+const HOENN_FOLIO = regionStartFolio("hoenn");
 
 export default function Landing() {
   const router = useRouter();
@@ -62,8 +63,8 @@ export default function Landing() {
           <p className="hero-eyebrow">An illuminated bestiary of the first kingdom</p>
           <h1 className="hero-title">Codex Monstrorum</h1>
           <p className="hero-sub">
-            The creatures of Kanto and Johto, drawn and recorded in the manner
-            of the old almanacs, from the annals of the first five generations.
+            The creatures of Kanto, Johto and Hoenn, drawn and recorded in the
+            manner of the old almanacs, from the annals of the first ages.
           </p>
           <a className="hero-cta" href="#tome">
             Descend to the codex
@@ -104,8 +105,8 @@ export default function Landing() {
                 <circle cx="60" cy="60" r="16" fill="none" strokeWidth="4" />
                 <circle cx="60" cy="60" r="6" />
               </svg>
-              <span className="tooling-sub">Kanto · Johto</span>
-              <span className="tooling-foot">CCLI creatures · two kingdoms</span>
+              <span className="tooling-sub">Kanto · Johto · Hoenn</span>
+              <span className="tooling-foot">CCCLXXXVI creatures · three kingdoms</span>
             </div>
           </div>
         </div>
@@ -115,13 +116,18 @@ export default function Landing() {
         ) : (
           <div className="kingdom-entries">
             <button className="kingdom-btn" onClick={() => openCodex(1)}>
-              <span className="kb-eyebrow">begin the first kingdom</span>
+              <span className="kb-eyebrow">the first kingdom</span>
               <span className="kb-name">Kanto</span>
             </button>
             <span className="kingdom-div" aria-hidden="true">❦</span>
             <button className="kingdom-btn" onClick={() => openCodex(JOHTO_FOLIO)}>
-              <span className="kb-eyebrow">begin the second kingdom</span>
+              <span className="kb-eyebrow">the second kingdom</span>
               <span className="kb-name">Johto</span>
+            </button>
+            <span className="kingdom-div" aria-hidden="true">❦</span>
+            <button className="kingdom-btn" onClick={() => openCodex(HOENN_FOLIO)}>
+              <span className="kb-eyebrow">the third kingdom</span>
+              <span className="kb-name">Hoenn</span>
             </button>
           </div>
         )}
