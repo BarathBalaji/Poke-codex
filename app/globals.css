@@ -1397,3 +1397,15 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
   color: var(--verdigris);
   margin-top: .3rem;
 }
+
+/* ————— rough, inked edges on the written text ————— */
+.leaf-running, .leaf-dex, .leaf-name, .leaf-genus, .leaf-crests, .leaf-from,
+.entry-hand-head, .hand-notes, .rec-label, .rec-dl, .rec-measures .st-key,
+.rec-arts, .lin-step, .leaf-foot, .codex-title,
+.hero-eyebrow, .hero-title, .hero-sub, .hero-cta,
+.tooling-title, .tooling-sub, .tooling-foot, .kb-eyebrow, .kb-name,
+.study-eyebrow, .study-invite, .ribbon, .search-card {
+  filter: url(#roughen-text);
+}
+/* the big Tangerine numerals read better crisp */
+.rec-measures .st-val { filter: none; }
